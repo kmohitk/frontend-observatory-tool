@@ -1,0 +1,16 @@
+{
+  "name": "@observatory/extension",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "node esbuild.config.mjs"
+  },
+  "dependencies": {
+    "@observatory/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.277",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.3"
+  }
+}

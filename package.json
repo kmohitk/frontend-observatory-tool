@@ -1,0 +1,16 @@
+{
+  "name": "frontend-performance-observatory",
+  "private": true,
+  "packageManager": "pnpm@9.14.2",
+  "scripts": {
+    "prepare": "pnpm --filter @observatory/shared build",
+    "build": "pnpm -r run build",
+    "dev": "pnpm --filter @observatory/dashboard dev",
+    "ws": "pnpm --filter @observatory/dashboard ws",
+    "build:sdk": "pnpm --filter @observatory/sdk build",
+    "build:extension": "pnpm --filter @observatory/extension build"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

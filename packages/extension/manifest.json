@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Frontend Performance Observatory",
+  "version": "1.0.0",
+  "description": "Forwards page performance metrics to the local Observatory dashboard.",
+  "permissions": [],
+  "host_permissions": ["*://localhost/*", "*://127.0.0.1/*", "<all_urls>"],
+  "background": {
+    "service_worker": "dist/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["dist/content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}
