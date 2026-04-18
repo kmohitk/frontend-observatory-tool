@@ -1,21 +1,54 @@
 # Frontend Performance Observatory
 
-Monorepo: **Chrome extension** (content script collects metrics) → HTTP `/ingest` → relay → WebSocket → Next.js dashboard. Optional **SDK** script posts `OBS_METRIC` for legacy experiments only.
+A small monorepo for collecting Core Web Vitals and resource timings in Chrome and viewing them on a local Next.js dashboard.
 
-**Deployment (local + production):** see [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
+**Full deployment (local + production):** [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)
 
-## Structure
+---
 
-- `apps/dashboard` — Next.js 14 (App Router), Tailwind, Recharts, Zustand
-- `packages/collector` — shared PerformanceObserver logic + optional overlay helpers
-- `packages/extension` — MV3 content script (collector + overlay) + background (ingest to relay)
-- `packages/sdk` — optional IIFE (`observatory-sdk.js`) that uses the collector + `postMessage`
-- `packages/shared` — `Metric` types and message guards
+## How data flows
+
+1. **Chrome extension — content script** (`packages/extension`) runs `@observatory/collector` on each page (except the dashboard on **port 3000**). It shows a small overlay and batches metrics to the background script.
+2. **Chrome extension — background** (`fetch`) sends JSON to the **relay**: `POST http://127.0.0.1:3001/ingest` (HTTP is used instead of a service-worker WebSocket for reliability).
+3. **Relay** (`apps/dashboard/scripts/ws-server.mjs`) stores metrics in memory (cap 500) and **broadcasts** each update to all connected WebSocket clients.
+4. **Dashboard** (Next.js) opens **`ws://127.0.0.1:3001`**, receives snapshots + live events, and updates **Zustand** → charts (with client-side debouncing and a 500-metric cap).
+
+```mermaid
+flowchart LR
+  Page[Visited page]
+  CS[Extension content script]
+  BG[Extension background]
+  Relay[Relay :3001]
+  Dash[Dashboard :3000]
+
+  Page --> CS
+  CS -->|batched messages| BG
+  BG -->|POST /ingest| Relay
+  Relay -->|WebSocket| Dash
+```
+
+**Not in the default path:** the **SDK** (`observatory-sdk.js`) is optional — it uses the same collector but emits `postMessage` for experiments. Do not load the SDK on the same page as the extension.
+
+---
+
+## Repository structure
+
+| Path | Purpose |
+|------|---------|
+| `apps/dashboard` | Next.js 14 (App Router), Tailwind, Recharts, Zustand, WebSocket client |
+| `apps/dashboard/scripts/ws-server.mjs` | HTTP + WebSocket relay (`/ingest`, `/health`) |
+| `packages/collector` | Shared PerformanceObserver + overlay helpers |
+| `packages/extension` | MV3 content + background |
+| `packages/sdk` | Optional IIFE bundle for script-tag / `postMessage` testing |
+| `packages/shared` | `Metric` types and helpers |
+
+---
 
 ## Prerequisites
 
-- Node 18+
+- Node.js 18+
 - [pnpm](https://pnpm.io) 9+
+- Google Chrome (for the extension)
 
 ## Install
 
@@ -23,76 +56,55 @@ Monorepo: **Chrome extension** (content script collects metrics) → HTTP `/inge
 pnpm install
 ```
 
-This runs `prepare` and builds `@observatory/shared` (needed by the dashboard).
+Runs `prepare` and builds `@observatory/shared` (required by the dashboard).
 
-## Run (three processes)
+## Quick start (development)
 
-1. **Metrics relay** (port 3001: WebSocket for the dashboard + **HTTP POST `/ingest`** for the extension):
+Run these in **separate terminals** from the repo root:
 
-   ```bash
-   pnpm ws
-   ```
+| Step | Command | What it does |
+|------|---------|----------------|
+| 1 | `pnpm ws` | Starts the **relay** on **3001** (`POST /ingest` + WebSocket + `GET /health`) |
+| 2 | `pnpm dev` | Starts the **dashboard** on **3000** |
+| 3 | `pnpm build:extension` then load unpacked | Builds `packages/extension` → Chrome **Load unpacked** → `packages/extension` |
 
-   Quick health check (should show `wsClients` and `metricsBuffered`):
+Health check:
 
-   ```bash
-   curl -s http://127.0.0.1:3001/health
-   ```
+```bash
+curl -s http://127.0.0.1:3001/health
+```
 
-   The Chrome MV3 **background uses HTTP POST** to `http://127.0.0.1:3001/ingest` (reliable in service workers). The dashboard still uses **WebSocket** on the same port for live updates.
+Open the dashboard at **`http://127.0.0.1:3000`** (or use the extension **toolbar icon**). The extension does **not** auto-open tabs on install.
 
-2. **Dashboard** (port 3000):
+### Using the extension
 
-   ```bash
-   pnpm dev
-   ```
+- **Content script** is **not** injected on `http(s)://localhost:3000` or `http(s)://127.0.0.1:3000` so the Next.js UI is not instrumented (avoids React conflicts and self-referential metrics).
+- Browse **any other** origin in a tab — metrics should appear on the dashboard if the relay is up and the top bar shows **WebSocket connected**.
+- Static test file **`observatory-test.html`**: if you use `npx serve`, pick a port **other than 3000** while the dashboard uses 3000, e.g. `npx serve . -l 4173`.
 
-3. **Chrome extension**
+### Optional: SDK (script tag)
 
-   ```bash
-   pnpm build:extension
-   ```
-
-   In Chrome: **Extensions → Developer mode → Load unpacked** → choose `packages/extension` (folder that contains `manifest.json` and `dist/`). Click **Reload** on the extension after each rebuild.
-
-   Open the dashboard with the extension’s **toolbar icon** (or go to **`http://127.0.0.1:3000/`** manually after `pnpm dev`). The extension does **not** auto-open tabs on install (that was causing duplicate tabs / odd reload behavior with unpacked extensions).
-
-   The content script is **disabled on port 3000** (`localhost` / `127.0.0.1`) so it does not inject into the Next.js dashboard (avoids React conflicts and a metric “feedback” loop). To test `observatory-test.html` with **`npx serve`**, use another port if the dashboard also uses 3000, e.g. **`npx serve . -l 4173`**.
-
-   The background script must be allowed to reach `127.0.0.1:3001` (included via `host_permissions` in `manifest.json`).
-
-## Build SDK (script tag)
+For legacy or script-only experiments:
 
 ```bash
 pnpm build:sdk
 ```
 
-Output: `packages/sdk/dist/observatory-sdk.js`
+Output: `packages/sdk/dist/observatory-sdk.js`. Do **not** use the SDK together with the extension on the same page.
 
-Inject on any page (with the extension installed and WS + dashboard running):
-
-```html
-<script src="file:///absolute/path/to/packages/sdk/dist/observatory-sdk.js"></script>
-```
-
-Or serve the file over HTTP and use a normal `src` URL. You should see the bottom-right overlay and metrics on the dashboard.
-
-## Full production build
+## Production build (all packages)
 
 ```bash
 pnpm build
 ```
 
-## Integration flow
+See [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for `next start`, running the relay in production, TLS, and configuring URLs.
 
-1. Install and enable the extension (reload after each `pnpm build:extension`).
-2. Start `pnpm ws` and `pnpm dev`.
-3. Open `http://localhost:3000`.
-4. Visit any page (HTTP/S) **except** the dashboard URL on **port 3000** (injection is disabled there). The **content script** runs the collector; metrics go **content → background `fetch` `/ingest` → relay → dashboard WebSocket** → Zustand → charts.
-5. **Optional:** load `packages/sdk/dist/observatory-sdk.js` on a page for a script-tag-only path (`postMessage`). Do **not** use SDK and extension together on the same page (double collection / two overlays).
+---
 
 ## Notes
 
-- The extension connects to `ws://localhost:3001`. Keep the WS server running while testing.
-- Client store debounces WebSocket metric batches (~120ms) and keeps at most 500 metrics.
-- Theme tokens: background `#0B1220`, cards `#1F2937`, text `#E5E7EB`.
+- **Ports:** dashboard **3000**, relay **3001** (change only with matching updates in extension + dashboard + docs).
+- **Relay must be running** whenever you expect live metrics.
+- Dashboard store: **~120ms** debounce on WebSocket batches; **max 500** metrics retained client-side; relay also caps at 500.
+- **Theme (dashboard):** background `#0B1220`, cards `#1F2937`, text `#E5E7EB`.
