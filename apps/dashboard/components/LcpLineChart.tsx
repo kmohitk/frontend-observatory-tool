@@ -18,7 +18,7 @@ export function LcpLineChart({ data }: { data: { t: number; v: number }[] }) {
   }));
 
   return (
-    <div className="h-[320px] w-full rounded-lg border border-obs-border bg-obs-card p-4">
+    <div className="h-[320px] w-full rounded-lg border border-obs-border bg-obs-card p-6">
       <div className="mb-3 text-sm font-medium text-obs-text">LCP over time</div>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>

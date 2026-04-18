@@ -6,6 +6,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@observatory/collector": "workspace:*",
     "@observatory/shared": "workspace:*"
   },
   "devDependencies": {

@@ -5,6 +5,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@observatory/shared': resolve(__dirname, '../shared/src/index.ts'),
+      '@observatory/collector': resolve(__dirname, '../collector/src/index.ts'),
     },
   },
   build: {

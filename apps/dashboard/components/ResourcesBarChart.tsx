@@ -28,7 +28,7 @@ export function ResourcesBarChart({ data }: { data: ResourceAgg[] }) {
   }));
 
   return (
-    <div className="h-[320px] w-full rounded-lg border border-obs-border bg-obs-card p-4">
+    <div className="h-[320px] w-full rounded-lg border border-obs-border bg-obs-card p-6">
       <div className="mb-3 text-sm font-medium text-obs-text">Slowest resources (max duration)</div>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 12, left: 8, bottom: 0 }}>

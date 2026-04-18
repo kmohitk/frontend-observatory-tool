@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "Forwards page performance metrics to the local Observatory dashboard.",
   "permissions": [],
+  "action": {
+    "default_title": "Open Observatory dashboard (localhost:3000)"
+  },
   "host_permissions": ["*://localhost/*", "*://127.0.0.1/*", "<all_urls>"],
   "background": {
     "service_worker": "dist/background.js"
@@ -11,8 +14,14 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
+      "exclude_matches": [
+        "http://localhost:3000/*",
+        "http://127.0.0.1:3000/*",
+        "https://localhost:3000/*",
+        "https://127.0.0.1:3000/*"
+      ],
       "js": ["dist/content.js"],
-      "run_at": "document_start"
+      "run_at": "document_idle"
     }
   ]
 }
