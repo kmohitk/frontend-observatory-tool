@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Observatory — test page</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #0b1220;
+        color: #e5e7eb;
+      }
+      main {
+        max-width: 42rem;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 6rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem;
+      }
+      p {
+        line-height: 1.6;
+        color: #9ca3af;
+        margin: 0 0 1rem;
+      }
+      .hero {
+        width: 100%;
+        max-height: 220px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #374151;
+        margin: 1rem 0;
+        background: #1f2937;
+      }
+      .panel {
+        background: #1f2937;
+        border: 1px solid #374151;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+      }
+      code {
+        font-size: 0.85em;
+        color: #a5b4fc;
+      }
+    </style>
+    <!--
+      Metrics + overlay come from the Observatory *extension* (content script). Do not also load
+      observatory-sdk.js here — you would double-count and get two overlays.
+
+      Optional legacy script (posts OBS_METRIC only; still needs a listener to reach the dashboard):
+      <script src="./packages/sdk/dist/observatory-sdk.js" defer></script>
+    -->
+  </head>
+  <body>
+    <main>
+      <h1>Observatory test</h1>
+      <p>
+        With the extension built and enabled, the content script collects Web Vitals and resources and
+        sends them to the relay. Run <code>pnpm ws</code> and <code>pnpm dev</code>, then open the
+        dashboard. If this file is served on <strong>port 3000</strong> while the Next dashboard also
+        uses 3000, use another port for static files, e.g.
+        <code>npx serve . -l 4173</code> — the extension skips injection on :3000 to avoid breaking the dashboard.
+      </p>
+      <!-- LCP candidate: large image -->
+      <img
+        class="hero"
+        src="https://picsum.photos/seed/observatory/960/400"
+        width="960"
+        height="400"
+        alt="Placeholder for LCP"
+      />
+      <div class="panel">
+        <p style="margin: 0">
+          Extra content and layout below helps CLS and long-task observers on heavier sites; here it is
+          mostly static. Open DevTools Performance if you want to compare with the overlay.
+        </p>
+      </div>
+    </main>
+  </body>
+</html>

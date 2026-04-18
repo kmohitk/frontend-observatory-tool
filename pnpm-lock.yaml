@@ -58,8 +58,17 @@ importers:
         specifier: ^5.6.3
         version: 5.9.3
 
+  packages/collector:
+    dependencies:
+      '@observatory/shared':
+        specifier: workspace:*
+        version: link:../shared
+
   packages/extension:
     dependencies:
+      '@observatory/collector':
+        specifier: workspace:*
+        version: link:../collector
       '@observatory/shared':
         specifier: workspace:*
         version: link:../shared
@@ -76,6 +85,9 @@ importers:
 
   packages/sdk:
     dependencies:
+      '@observatory/collector':
+        specifier: workspace:*
+        version: link:../collector
       '@observatory/shared':
         specifier: workspace:*
         version: link:../shared
