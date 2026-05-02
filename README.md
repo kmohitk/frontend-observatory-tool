@@ -27,8 +27,6 @@ flowchart LR
   Relay -->|WebSocket| Dash
 ```
 
-**Not in the default path:** the **SDK** (`observatory-sdk.js`) is optional — it uses the same collector but emits `postMessage` for experiments. Do not load the SDK on the same page as the extension.
-
 ---
 
 ## Repository structure
@@ -39,7 +37,6 @@ flowchart LR
 | `apps/dashboard/scripts/ws-server.mjs` | HTTP + WebSocket relay (`/ingest`, `/health`) |
 | `packages/collector` | Shared PerformanceObserver + overlay helpers |
 | `packages/extension` | MV3 content + background |
-| `packages/sdk` | Optional IIFE bundle for script-tag / `postMessage` testing |
 | `packages/shared` | `Metric` types and helpers |
 
 ---
@@ -81,16 +78,6 @@ Open the dashboard at **`http://127.0.0.1:3000`** (or use the extension **toolba
 - **Content script** is **not** injected on `http(s)://localhost:3000` or `http(s)://127.0.0.1:3000` so the Next.js UI is not instrumented (avoids React conflicts and self-referential metrics).
 - Browse **any other** origin in a tab — metrics should appear on the dashboard if the relay is up and the top bar shows **WebSocket connected**.
 - Static test file **`observatory-test.html`**: if you use `npx serve`, pick a port **other than 3000** while the dashboard uses 3000, e.g. `npx serve . -l 4173`.
-
-### Optional: SDK (script tag)
-
-For legacy or script-only experiments:
-
-```bash
-pnpm build:sdk
-```
-
-Output: `packages/sdk/dist/observatory-sdk.js`. Do **not** use the SDK together with the extension on the same page.
 
 ## Production build (all packages)
 

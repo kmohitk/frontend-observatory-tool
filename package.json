@@ -7,7 +7,6 @@
     "build": "pnpm -r run build",
     "dev": "pnpm --filter @observatory/dashboard dev",
     "ws": "pnpm --filter @observatory/dashboard ws",
-    "build:sdk": "pnpm --filter @observatory/sdk build",
     "build:extension": "pnpm --filter @observatory/extension build"
   },
   "devDependencies": {
