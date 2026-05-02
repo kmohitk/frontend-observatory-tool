@@ -150,14 +150,6 @@ Distribute the `packages/extension` folder (packed for the Chrome Web Store or p
 
 `host_permissions` in `manifest.json` must cover your relay and dashboard origins (e.g. `https://observatory.example.com/*`).
 
-### 4. Optional SDK (`observatory-sdk.js`)
-
-```bash
-pnpm build:sdk
-```
-
-Artifact: `packages/sdk/dist/observatory-sdk.js`. Host on a CDN or ship via npm if you publish a package. Do **not** load the SDK and the extension on the same page (double collection).
-
 ---
 
 ## Configuration (non-localhost)
